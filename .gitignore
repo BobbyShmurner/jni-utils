@@ -51,15 +51,14 @@ Android.mk.backup
 # QPM stuff
 [Ee]xtern/
 *.qmod
-mod.json
 qpm.shared.json
 qpm_defines.cmake
+![Cc][Mm]ake[Ll]ists.txt
 
 # CMake stuff
 [Bb]uild/
 cmake-build-*/
 extern.cmake
-![Cc][Mm]ake[Ll]ists.txt
 
 # Exclude the setup file so people dont accidentally run it
 setup-package.ps1
