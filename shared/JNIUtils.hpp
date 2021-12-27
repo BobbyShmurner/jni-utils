@@ -327,7 +327,7 @@ namespace JNIUtils {
 		
 		GET_JSTRING_FIELD(env, versionName, packageInfo, packageInfoClass, "versionName", "Ljava/lang/String;");
 
-		return versionName
+		return versionName;
 	}
 
 	// -- Private Functions --
