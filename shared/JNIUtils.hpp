@@ -8,6 +8,8 @@
 // This is used to pass literally nothing to a parameter
 #define NOTHING
 
+// -- Misc Functions
+
 // Log Function
 
 #define LOG_JNI_TEST(objectToTest, successMessage, failMessage) \
@@ -16,6 +18,20 @@ else { __android_log_print(ANDROID_LOG_VERBOSE, "modloader-utils [JNI]", success
 
 #define LOG_JNI(message, ...) \
 __android_log_print(ANDROID_LOG_ERROR, "modloader-utils [JNI]", message __VA_OPT__(,) __VA_ARGS__)
+
+// New Object
+
+#define NEW_JOBJECT(env, varName, clazz, sig, ...) \
+jobject varName; { \
+jmethodID GET_JMETHODID(env, varName##_MethodID, clazz, "<init>", sig); \
+varName = CALL_METHOD_FROM_JMETHODID(env, varName, clazz, NewObject, varName##_MethodID, __VA_ARGS__ ); }
+
+// Create Global Object
+#define CREATE_GLOBAL_JOBJECT(env, varName, object) \
+jobject varName = env->NewGlobalRef(object); \
+LOG_JNI_TEST(varName, "Created Global \"%s\"", "Failed To Create Global \"%s\"")
+
+// -- Get Methods --
 
 // Get Class
 
@@ -27,12 +43,25 @@ LOG_JNI_TEST(varName, "Found Class \"%s\"", "Failed To Find Class \"%s\"")
 jclass varName = env->GetObjectClass(object); \
 LOG_JNI_TEST(varName, "Got Object \"%s\"", "Failed To Get Object \"%s\"")
 
-// New Object
+// Get MethodID
 
-#define NEW_JOBJECT(env, varName, clazz, sig, ...) \
-jobject varName; { \
-jmethodID GET_JMETHODID(env, varName##_MethodID, clazz, "<init>", sig); \
-varName = CALL_METHOD_FROM_JMETHODID(env, varName, clazz, NewObject, varName##_MethodID, __VA_ARGS__ ); }
+#define GET_JMETHODID(env, varName, clazz, methodName, sig) \
+varName = env->GetMethodID(clazz, methodName, sig); \
+LOG_JNI_TEST(varName, "Got MethodID \"%s\"", "Failed To Get MethodID \"%s\"");
+
+#define GET_STATIC_JMETHODID(env, varName, clazz, methodName, sig) \
+varName = env->GetStaticMethodID(clazz, methodName, sig); \
+LOG_JNI_TEST(varName, "Got Static MethodID \"%s\"", "Failed To Get Static MethodID \"%s\"")
+
+// Get FieldID
+
+#define GET_JFIELDID(env, varName, clazz, fieldName, sig) \
+varName = env->GeFieldID(clazz, fieldName, sig); \
+LOG_JNI_TEST(varName, "Got FieldID \"%s\"", "Failed To Get FieldID \"%s\"")
+
+#define GET_STATIC_JFIELDID(env, varName, clazz, fieldName, sig) \
+varName = env->GetStaticFieldID(clazz, fieldName, sig); \
+LOG_JNI_TEST(varName, "Got Static FieldID \"%s\"", "Failed To Get Static FieldID \"%s\"")
 
 // -- Call Methods -- 
 
@@ -149,61 +178,102 @@ CALL_METHOD_GENERIC(env, varName, object, methodName, sig, jstring, CallObjectMe
 #define CALL_STATIC_JSTRING_METHOD(env, varName, clazz, methodName, sig, ...) \
 CALL_STATIC_METHOD_GENERIC(env, varName, clazz, methodName, sig, jstring, CallStaticObjectMethod, __VA_ARGS__)
 
-// Get MethodID
-
-#define GET_JMETHODID(env, varName, clazz, methodName, sig) \
-varName = env->GetMethodID(clazz, methodName, sig); \
-LOG_JNI_TEST(varName, "Got MethodID \"%s\"", "Failed To Get MethodID \"%s\"");
-
-#define GET_STATIC_JMETHODID(env, varName, clazz, methodName, sig) \
-varName = env->GetStaticMethodID(clazz, methodName, sig); \
-LOG_JNI_TEST(varName, "Got Static MethodID \"%s\"", "Failed To Get Static MethodID \"%s\"")
-
-// Get Field
-
-#define GET_FIELD(env, varName, object, clazz, fieldName, sig) \
-jobject varName; { \
-jfieldID GET_JFIELDID(env, varName##_FieldID, clazz, fieldName, sig); \
-varName = GET_JFIELD_FROM_JFIELDID(env, varName, object, varName##_FieldID); }
-
-#define GET_STATIC_FIELD(env, varName, clazz, fieldName, sig) \
-jobject varName; { \
-jfieldID GET_STATIC_JFIELDID(env, varName##_FieldID, clazz, fieldName, sig); \
-varName = GET_STATIC_JFIELD_FROM_JFIELDID(env, varName, clazz, varName##_FieldID); }
-
-// Get JString Field
-
-#define GET_JSTRING_FIELD(env, varName, object, clazz, fieldName, sig) \
-jstring varName; { \
-jfieldID GET_JFIELDID(env, varName##_FieldID, clazz, fieldName, sig); \
-varName = (jstring)GET_JFIELD_FROM_JFIELDID(env, varName, object, varName##_FieldID); }
-
-#define GET_STATIC_JSTRING_FIELD(env, varName, clazz, fieldName, sig) \
-jstring varName; { \
-jfieldID GET_STATIC_JFIELDID(env, varName##_FieldID, clazz, fieldName, sig); \
-varName = (jstring)GET_STATIC_JFIELD_FROM_JFIELDID(env, varName, clazz, varName##_FieldID); }
-
-// Get FieldID
-
-#define GET_JFIELDID(env, varName, clazz, fieldName, sig) \
-varName = env->GetFieldID(clazz, fieldName, sig); \
-LOG_JNI_TEST(varName, "Got FieldID \"%s\"", "Failed To Get FieldID \"%s\"")
-
-#define GET_STATIC_JFIELDID(env, varName, clazz, fieldName, sig) \
-varName = env->GetStaticFieldID(clazz, fieldName, sig); \
-LOG_JNI_TEST(varName, "Got Static FieldID \"%s\"", "Failed To Get Static FieldID \"%s\"")
+// -- Get Field Methods -- 
 
 // Get Field From FieldID
 
-#define GET_JFIELD_FROM_JFIELDID(env, varName, object, fieldID) \
-env->GetObjectField(object, fieldID); \
+#define GET_JFIELD_FROM_JFIELDID(env, varName, object, fieldID, type, jniMethod) \
+(type)env->jniMethod(object, fieldID); \
 LOG_JNI_TEST(varName, "Got Field \"%s\"", "Failed To Get Field \"%s\"")
 
-#define GET_STATIC_JFIELD_FROM_JFIELDID(env, varName, clazz, fieldID) \
-env->GetStaticObjectField(clazz, fieldID); \
-LOG_JNI_TEST(varName, "Got Static Field \"%s\"", "Failed To Get Static Field \"%s\"")
+// Get Generic Field
 
-// Create Global Object
-#define CREATE_GLOBAL_JOBJECT(env, varName, object) \
-jobject varName = env->NewGlobalRef(object); \
-LOG_JNI_TEST(varName, "Created Global \"%s\"", "Failed To Create Global \"%s\"")
+#define GET_FIELD_GENERIC(env, varName, object, clazz, fieldName, sig, type, jniMethod) \
+type varName; { \
+jfieldID GET_JFIELDID(env, varName##_FieldID, clazz, fieldName, sig); \
+varName = GET_JFIELD_FROM_JFIELDID(env, varName, object, varName##_FieldID, type, jniMethod); }
+
+#define GET_STATIC_FIELD_GENERIC(env, varName, object, clazz, fieldName, sig, type, jniMethod) \
+type varName; { \
+jfieldID GET_STATIC_JFIELDID(env, varName##_FieldID, clazz, fieldName, sig); \
+varName = GET_JFIELD_FROM_JFIELDID(env, varName, object, varName##_FieldID, type, jniMethod); }
+
+// Get Boolean Field
+
+#define GET_JBOOLEAN_FIELD(env, varName, object, clazz, fieldName, sig) \
+GET_FIELD_GENERIC(env, varName, object, clazz, fieldName, sig, jboolean, GetBooleanField)
+
+#define GET_STATIC_JBOOLEAN_FIELD(env, varName, clazz, fieldName, sig) \
+GET_STATIC_FIELD_GENERIC(env, varName, object, clazz, fieldName, sig, jboolean, GetStaticBooleanField)
+
+// Get Byte Field
+
+#define GET_JBYTE_FIELD(env, varName, object, clazz, fieldName, sig) \
+GET_FIELD_GENERIC(env, varName, object, clazz, fieldName, sig, jbyte, GetByteField)
+
+#define GET_STATIC_JBYTE_FIELD(env, varName, clazz, fieldName, sig) \
+GET_STATIC_FIELD_GENERIC(env, varName, object, clazz, fieldName, sig, jbyte, GetStaticByteField)
+
+// Get Char Field
+
+#define GET_JCHAR_FIELD(env, varName, object, clazz, fieldName, sig) \
+GET_FIELD_GENERIC(env, varName, object, clazz, fieldName, sig, jchar, GetCharField)
+
+#define GET_STATIC_JBYTE_FIELD(env, varName, clazz, fieldName, sig) \
+GET_STATIC_FIELD_GENERIC(env, varName, object, clazz, fieldName, sig, jchar, GetStaticCharField)
+
+// Get Double Field
+
+#define GET_JDOUBLE_FIELD(env, varName, object, clazz, fieldName, sig) \
+GET_FIELD_GENERIC(env, varName, object, clazz, fieldName, sig, jdouble, GetDoubleField)
+
+#define GET_STATIC_JDOUBLE_FIELD(env, varName, clazz, fieldName, sig) \
+GET_STATIC_FIELD_GENERIC(env, varName, object, clazz, fieldName, sig, jdouble, GetStaticDoubleField)
+
+// Get Float Field
+
+#define GET_JFLOAT_FIELD(env, varName, object, clazz, fieldName, sig) \
+GET_FIELD_GENERIC(env, varName, object, clazz, fieldName, sig, jfloat, GetFloatField)
+
+#define GET_STATIC_JFLOAT_FIELD(env, varName, clazz, fieldName, sig) \
+GET_STATIC_FIELD_GENERIC(env, varName, object, clazz, fieldName, sig, jfloat, GetStaticFloatField)
+
+// Get Int Field
+
+#define GET_JINT_FIELD(env, varName, object, clazz, fieldName, sig) \
+GET_FIELD_GENERIC(env, varName, object, clazz, fieldName, sig, jint, GetIntField)
+
+#define GET_STATIC_JINT_FIELD(env, varName, clazz, fieldName, sig) \
+GET_STATIC_FIELD_GENERIC(env, varName, object, clazz, fieldName, sig, jint, GetStaticIntField)
+
+// Get Long Field
+
+#define GET_JLONG_FIELD(env, varName, object, clazz, fieldName, sig) \
+GET_FIELD_GENERIC(env, varName, object, clazz, fieldName, sig, jlong, GetLongField)
+
+#define GET_STATIC_JLONG_FIELD(env, varName, clazz, fieldName, sig) \
+GET_STATIC_FIELD_GENERIC(env, varName, object, clazz, fieldName, sig, jlong, GetStaticLongField)
+
+// Get Object Field
+
+#define GET_JOBJECT_FIELD(env, varName, object, clazz, fieldName, sig) \
+GET_FIELD_GENERIC(env, varName, object, clazz, fieldName, sig, jobject, GetObjectField)
+
+#define GET_STATIC_JOBJECT_FIELD(env, varName, clazz, fieldName, sig) \
+GET_STATIC_FIELD_GENERIC(env, varName, object, clazz, fieldName, sig, jobject, GetStaticObjectField)
+
+// Get Short Field
+
+#define GET_JSHORT_FIELD(env, varName, object, clazz, fieldName, sig) \
+GET_FIELD_GENERIC(env, varName, object, clazz, fieldName, sig, jshort, GetShortField)
+
+#define GET_STATIC_JSHORT_FIELD(env, varName, clazz, fieldName, sig) \
+GET_STATIC_FIELD_GENERIC(env, varName, object, clazz, fieldName, sig, jshort, GetStaticShortField)
+
+// Get String Field
+
+#define GET_JSTRING_FIELD(env, varName, object, clazz, fieldName, sig) \
+GET_FIELD_GENERIC(env, varName, object, clazz, fieldName, sig, jstring, GetObjectField)
+
+#define GET_STATIC_JSTRING_FIELD(env, varName, clazz, fieldName, sig) \
+GET_STATIC_FIELD_GENERIC(env, varName, object, clazz, fieldName, sig, jstring, GetStaticObjectField)
