@@ -159,4 +159,4 @@ jobs:
         git push --tags --force
         
     - name: QPM Publish
-      run: ./QPM/QPM publish
+      run: ./QPM/QPM-rust publish
