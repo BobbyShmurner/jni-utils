@@ -137,8 +137,9 @@ jobs:
     # run qpm restore
     - name: QPM Restore
 #       if: steps.cache-qpm-deps.outputs.cache-hit != 'true'
-      chmod +x ./QPM/qpm-rust
-      run: ./QPM/qpm-rust restore
+      run: |
+        chmod +x ./QPM/qpm-rust
+        ./QPM/qpm-rust restore
     
     #list what files are in the extern folder and in qpm temp folder
     - name: List Post Restore
