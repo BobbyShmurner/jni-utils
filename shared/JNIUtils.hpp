@@ -1,5 +1,7 @@
 #pragma once
 
+#include <string>
+
 #include <jni.h>
 #include <android/log.h>
 
@@ -7,8 +9,6 @@
 
 // This is used to pass literally nothing to a parameter
 #define NOTHING
-
-// -- Misc Functions
 
 // Log Function
 
@@ -277,3 +277,71 @@ GET_FIELD_GENERIC(env, varName, object, clazz, fieldName, sig, jstring, GetObjec
 
 #define GET_STATIC_JSTRING_FIELD(env, varName, clazz, fieldName, sig) \
 GET_STATIC_FIELD_GENERIC(env, varName, object, clazz, fieldName, sig, jstring, GetStaticObjectField)
+
+namespace JNIUtils {
+	static JavaVM* Jvm;
+
+	// -- Utils Functions --
+
+	static JNIEnv* GetJNIEnv() {
+		JNIEnv* env;
+
+		JavaVMAttachArgs args;
+		args.version = JNI_VERSION_1_6;
+		args.name = NULL;
+		args.group = NULL;
+
+		Jvm->AttachCurrentThread(&env, &args);
+
+		return env;
+	}
+
+	static std::string ToString(JNIEnv* env, jstring str) {
+		jboolean isCopy = true;
+		return std::string(env->GetStringUTFChars(str, &isCopy));
+	}
+
+	static jobject GetAppActivity(JNIEnv* env) {
+		GET_JCLASS(env, unityPlayerClass, "com/unity3d/player/UnityPlayer");
+		GET_STATIC_JOBJECT_FIELD(env, appActivity, unityPlayerClass, "currentActivity", "Landroid/app/Activity;");
+
+		return appActivity;
+	}
+
+	static jstring GetPackageName(JNIEnv* env) {
+		jobject appActivity = GetAppActivity(env);
+
+		CALL_JSTRING_METHOD(env, packageName, appActivity, "getPackageName", "()Ljava/lang/String;");
+
+		return packageName;
+	}
+
+	static jstring GetGameVersion(JNIEnv* env) {
+		jstring packageName = GetPackageName(env);
+		jobject appActivity = GetAppActivity(env);
+
+		CALL_JOBJECT_METHOD(env, packageManager, appActivity, "getPackageManager", "()Landroid/content/pm/PackageManager;");
+
+		CALL_JOBJECT_METHOD(env, packageInfo, packageManager, "getPackageInfo", "(Ljava/lang/String;I)Landroid/content/pm/PackageInfo;", packageName, 0);
+		GET_JCLASS_FROM_JOBJECT(env, packageInfoClass, packageInfo);
+		
+		GET_JSTRING_FIELD(env, versionName, packageInfo, packageInfoClass, "versionName", "Ljava/lang/String;");
+
+		return versionName
+	}
+
+	// -- Private Functions --
+
+	static void CacheJVM() {
+		JNIEnv* env = Modloader::getJni();
+		env->GetJavaVM(&Jvm);
+	}
+
+	static void __attribute__((constructor)) OnDlopen() {
+		__android_log_print(ANDROID_LOG_VERBOSE, "jni-utils", "Caching Jvm...");
+		CacheJVM();
+
+		if (Jvm != nullptr) __android_log_print(ANDROID_LOG_VERBOSE, "jni-utils", "Successfully cached Jvm!");
+		else __android_log_print(ANDROID_LOG_ERROR, "jni-utils", "Failed to cache Jvm, Jvm is a nullptr!");
+	}
+}
