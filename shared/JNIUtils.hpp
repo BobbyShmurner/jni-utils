@@ -332,14 +332,11 @@ namespace JNIUtils {
 
 	// -- Private Functions --
 
-	static void CacheJVM() {
-		JNIEnv* env = Modloader::getJni();
-		env->GetJavaVM(&Jvm);
-	}
-
 	static void __attribute__((constructor)) OnDlopen() {
 		__android_log_print(ANDROID_LOG_VERBOSE, "jni-utils", "Caching Jvm...");
-		CacheJVM();
+
+		JNIEnv* env = Modloader::getJni();
+		env->GetJavaVM(&Jvm);
 
 		if (Jvm != nullptr) __android_log_print(ANDROID_LOG_VERBOSE, "jni-utils", "Successfully cached Jvm!");
 		else __android_log_print(ANDROID_LOG_ERROR, "jni-utils", "Failed to cache Jvm, Jvm is a nullptr!");
