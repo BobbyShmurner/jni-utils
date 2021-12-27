@@ -140,16 +140,11 @@ jobs:
       run: |
         chmod +x ./QPM/qpm-rust
         ./QPM/qpm-rust restore
-    
-    #list what files are in the extern folder and in qpm temp folder
-    - name: List Post Restore
+
+    - name: QPM Legacy fix
       run: |
-        ls -la ${GITHUB_WORKSPACE}/extern/
-        ls -la QPM_Temp
-#    - name: CD to bs-hook src
-#      run: |
-#        cd ${GITHUB_WORKSPACE}/extern/beatsaber-hook/src/inline-hook
-#        ls ./
+        chmod +x ./QPM/qpm-rust
+        ./QPM/qpm-rust cache legacy-fix
 
     # actually run the build script
     - name: Build
