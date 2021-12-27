@@ -56,7 +56,7 @@ LOG_JNI_TEST(varName, "Got Static MethodID \"%s\"", "Failed To Get Static Method
 // Get FieldID
 
 #define GET_JFIELDID(env, varName, clazz, fieldName, sig) \
-varName = env->GeFieldID(clazz, fieldName, sig); \
+varName = env->GetFieldID(clazz, fieldName, sig); \
 LOG_JNI_TEST(varName, "Got FieldID \"%s\"", "Failed To Get FieldID \"%s\"")
 
 #define GET_STATIC_JFIELDID(env, varName, clazz, fieldName, sig) \
@@ -193,10 +193,10 @@ type varName; { \
 jfieldID GET_JFIELDID(env, varName##_FieldID, clazz, fieldName, sig); \
 varName = GET_JFIELD_FROM_JFIELDID(env, varName, object, varName##_FieldID, type, jniMethod); }
 
-#define GET_STATIC_FIELD_GENERIC(env, varName, object, clazz, fieldName, sig, type, jniMethod) \
+#define GET_STATIC_FIELD_GENERIC(env, varName, clazz, fieldName, sig, type, jniMethod) \
 type varName; { \
 jfieldID GET_STATIC_JFIELDID(env, varName##_FieldID, clazz, fieldName, sig); \
-varName = GET_JFIELD_FROM_JFIELDID(env, varName, object, varName##_FieldID, type, jniMethod); }
+varName = GET_JFIELD_FROM_JFIELDID(env, varName, clazz, varName##_FieldID, type, jniMethod); }
 
 // Get Boolean Field
 
@@ -219,7 +219,7 @@ GET_STATIC_FIELD_GENERIC(env, varName, object, clazz, fieldName, sig, jbyte, Get
 #define GET_JCHAR_FIELD(env, varName, object, clazz, fieldName, sig) \
 GET_FIELD_GENERIC(env, varName, object, clazz, fieldName, sig, jchar, GetCharField)
 
-#define GET_STATIC_JBYTE_FIELD(env, varName, clazz, fieldName, sig) \
+#define GET_STATIC_JCHAR_FIELD(env, varName, clazz, fieldName, sig) \
 GET_STATIC_FIELD_GENERIC(env, varName, object, clazz, fieldName, sig, jchar, GetStaticCharField)
 
 // Get Double Field
@@ -260,7 +260,7 @@ GET_STATIC_FIELD_GENERIC(env, varName, object, clazz, fieldName, sig, jlong, Get
 GET_FIELD_GENERIC(env, varName, object, clazz, fieldName, sig, jobject, GetObjectField)
 
 #define GET_STATIC_JOBJECT_FIELD(env, varName, clazz, fieldName, sig) \
-GET_STATIC_FIELD_GENERIC(env, varName, object, clazz, fieldName, sig, jobject, GetStaticObjectField)
+GET_STATIC_FIELD_GENERIC(env, varName, clazz, fieldName, sig, jobject, GetStaticObjectField)
 
 // Get Short Field
 
