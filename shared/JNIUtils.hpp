@@ -90,13 +90,13 @@ varName = (type)CALL_METHOD_FROM_JMETHODID(env, varName, clazz, jniMethod, varNa
 // Call Void Methods
 
 #define CALL_VOID_METHOD(env, object, methodName, sig, ...) { \
-GET_JCLASS_FROM_JOBJECT(env, methodName##_Class, object); \
-jmethodID GET_JMETHODID(env, methodName##_MethodID, methodName##_Class, ""#methodName, sig); \
-CALL_METHOD_FROM_JMETHODID_WITHOUT_LOG(env, object, CallVoidMethod, methodName##_MethodID, __VA_ARGS__ ); }
+GET_JCLASS_FROM_JOBJECT(env, voidClass, object); \
+jmethodID GET_JMETHODID(env, voidMethodID, voidClass, methodName, sig); \
+CALL_METHOD_FROM_JMETHODID_WITHOUT_LOG(env, object, CallVoidMethod, voidMethodID, __VA_ARGS__ ); }
 
 #define CALL_STATIC_VOID_METHOD(env, clazz, methodName, sig, ...) { \
-jmethodID GET_STATIC_JMETHODID(env, methodName##_MethodID, clazz, ""#methodName, sig); \
-CALL_METHOD_FROM_JMETHODID_WITHOUT_LOG(env, clazz, CallStaticVoidMethod, methodName##_MethodID, __VA_ARGS__ ); }
+jmethodID GET_STATIC_JMETHODID(env, voidMethodID, clazz, methodName, sig); \
+CALL_METHOD_FROM_JMETHODID_WITHOUT_LOG(env, clazz, CallStaticVoidMethod, voidMethodID, __VA_ARGS__ ); }
 
 // Call Boolean Methods
 
