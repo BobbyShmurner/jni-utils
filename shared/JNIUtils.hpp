@@ -279,11 +279,11 @@ GET_FIELD_GENERIC(env, varName, object, clazz, fieldName, sig, jstring, GetObjec
 GET_STATIC_FIELD_GENERIC(env, varName, object, clazz, fieldName, sig, jstring, GetStaticObjectField)
 
 namespace JNIUtils {
-	static JavaVM* Jvm;
+	inline JavaVM* Jvm;
 
 	// -- Utils Functions --
 
-	static JNIEnv* GetJNIEnv() {
+	inline JNIEnv* GetJNIEnv() {
 		JNIEnv* env;
 
 		JavaVMAttachArgs args;
@@ -296,19 +296,19 @@ namespace JNIUtils {
 		return env;
 	}
 
-	static std::string ToString(JNIEnv* env, jstring str) {
+	inline std::string ToString(JNIEnv* env, jstring str) {
 		jboolean isCopy = true;
 		return std::string(env->GetStringUTFChars(str, &isCopy));
 	}
 
-	static jobject GetAppActivity(JNIEnv* env) {
+	inline jobject GetAppActivity(JNIEnv* env) {
 		GET_JCLASS(env, unityPlayerClass, "com/unity3d/player/UnityPlayer");
 		GET_STATIC_JOBJECT_FIELD(env, appActivity, unityPlayerClass, "currentActivity", "Landroid/app/Activity;");
 
 		return appActivity;
 	}
 
-	static jstring GetPackageName(JNIEnv* env) {
+	inline jstring GetPackageName(JNIEnv* env) {
 		jobject appActivity = GetAppActivity(env);
 
 		CALL_JSTRING_METHOD(env, packageName, appActivity, "getPackageName", "()Ljava/lang/String;");
@@ -316,7 +316,7 @@ namespace JNIUtils {
 		return packageName;
 	}
 
-	static jstring GetGameVersion(JNIEnv* env) {
+	inline jstring GetGameVersion(JNIEnv* env) {
 		jstring packageName = GetPackageName(env);
 		jobject appActivity = GetAppActivity(env);
 
@@ -332,7 +332,7 @@ namespace JNIUtils {
 
 	// -- Private Functions --
 
-	static void __attribute__((constructor)) OnDlopen() {
+	inline void __attribute__((constructor)) OnDlopen() {
 		__android_log_print(ANDROID_LOG_VERBOSE, "jni-utils", "Caching Jvm...");
 
 		JNIEnv* env = Modloader::getJni();
