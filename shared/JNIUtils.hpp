@@ -301,26 +301,27 @@ namespace JNIUtils {
 		return std::string(env->GetStringUTFChars(str, &isCopy));
 	}
 
-	inline jobject GetAppActivity(JNIEnv* env) {
-		GET_JCLASS(env, unityPlayerClass, "com/unity3d/player/UnityPlayer");
-		GET_STATIC_JOBJECT_FIELD(env, appActivity, unityPlayerClass, "currentActivity", "Landroid/app/Activity;");
+	inline jobject GetAppContext(JNIEnv* env) {
+		GET_JCLASS(env, activeThreadClass, "android/app/ActivityThread");
+		CALL_STATIC_JOBJECT_METHOD(env, activeThread, activeThreadClass, "currentActivityThread", "()Landroid/app/ActivityThread;");
 
-		return appActivity;
+		CALL_JOBJECT_METHOD(env, appContext, activeThread, "getApplication", "()Landroid/app/Application;");
+		return appContext;
 	}
 
 	inline jstring GetPackageName(JNIEnv* env) {
-		jobject appActivity = GetAppActivity(env);
+		jobject appContext = GetAppContext(env);
 
-		CALL_JSTRING_METHOD(env, packageName, appActivity, "getPackageName", "()Ljava/lang/String;");
+		CALL_JSTRING_METHOD(env, packageName, appContext, "getPackageName", "()Ljava/lang/String;");
 
 		return packageName;
 	}
 
 	inline jstring GetGameVersion(JNIEnv* env) {
 		jstring packageName = GetPackageName(env);
-		jobject appActivity = GetAppActivity(env);
+		jobject appContext = GetAppContext(env);
 
-		CALL_JOBJECT_METHOD(env, packageManager, appActivity, "getPackageManager", "()Landroid/content/pm/PackageManager;");
+		CALL_JOBJECT_METHOD(env, packageManager, appContext, "getPackageManager", "()Landroid/content/pm/PackageManager;");
 
 		CALL_JOBJECT_METHOD(env, packageInfo, packageManager, "getPackageInfo", "(Ljava/lang/String;I)Landroid/content/pm/PackageInfo;", packageName, 0);
 		GET_JCLASS_FROM_JOBJECT(env, packageInfoClass, packageInfo);
