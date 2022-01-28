@@ -4,7 +4,7 @@
   "info": {
     "name": "JNI Utils",
     "id": "jni-utils",
-    "version": "1.0.1",
+    "version": "1.0.9",
     "url": "https://github.com/BobbyShmurner/jni-utils",
     "additionalData": {
       "headersOnly": true
