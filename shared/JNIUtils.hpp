@@ -12,12 +12,12 @@
 
 // Log Function
 
-#define LOG_JNI_TEST(objectToTest, successMessage, failMessage) \
-if (objectToTest == nullptr) { __android_log_print(ANDROID_LOG_ERROR, "modloader-utils [JNI]", failMessage, ""#objectToTest); } \
-else { __android_log_print(ANDROID_LOG_VERBOSE, "modloader-utils [JNI]", successMessage, ""#objectToTest); }
-
 #define LOG_JNI(message, ...) \
-__android_log_print(ANDROID_LOG_ERROR, "modloader-utils [JNI]", message __VA_OPT__(,) __VA_ARGS__)
+__android_log_print(ANDROID_LOG_VERBOSE, "jni-utils", message __VA_OPT__(,) __VA_ARGS__)
+
+#define LOG_JNI_TEST(objectToTest, successMessage, failMessage, ...) \
+if (objectToTest == nullptr) { __android_log_print(ANDROID_LOG_ERROR, "jni-utils", failMessage __VA_OPT__(,) __VA_ARGS__); } \
+else { __android_log_print(ANDROID_LOG_VERBOSE, "jni-utils", successMessage __VA_OPT__(,) __VA_ARGS__); }
 
 // New Object
 
@@ -29,7 +29,7 @@ varName = CALL_METHOD_FROM_JMETHODID(env, varName, clazz, NewObject, varName##_M
 // Create Global Object
 #define CREATE_GLOBAL_JOBJECT(env, varName, object) \
 jobject varName = env->NewGlobalRef(object); \
-LOG_JNI_TEST(varName, "Created Global \"%s\"", "Failed To Create Global \"%s\"")
+LOG_JNI_TEST(varName, "Created Global \"%s\"", "Failed To Create Global \"%s\"", ""#varName)
 
 // -- Get Methods --
 
@@ -37,31 +37,31 @@ LOG_JNI_TEST(varName, "Created Global \"%s\"", "Failed To Create Global \"%s\"")
 
 #define GET_JCLASS(env, varName, classSig) \
 jclass varName = env->FindClass(classSig); \
-LOG_JNI_TEST(varName, "Found Class \"%s\"", "Failed To Find Class \"%s\"")
+LOG_JNI_TEST(varName, "Found Class \"%s\"", "Failed To Find Class \"%s\"", ""#varName)
 
 #define GET_JCLASS_FROM_JOBJECT(env, varName, object) \
 jclass varName = env->GetObjectClass(object); \
-LOG_JNI_TEST(varName, "Got Object \"%s\"", "Failed To Get Object \"%s\"")
+LOG_JNI_TEST(varName, "Got Object \"%s\"", "Failed To Get Object \"%s\"", ""#varName)
 
 // Get MethodID
 
 #define GET_JMETHODID(env, varName, clazz, methodName, sig) \
 varName = env->GetMethodID(clazz, methodName, sig); \
-LOG_JNI_TEST(varName, "Got MethodID \"%s\"", "Failed To Get MethodID \"%s\"");
+LOG_JNI_TEST(varName, "Got MethodID \"%s\"", "Failed To Get MethodID \"%s\"", ""#varName);
 
 #define GET_STATIC_JMETHODID(env, varName, clazz, methodName, sig) \
 varName = env->GetStaticMethodID(clazz, methodName, sig); \
-LOG_JNI_TEST(varName, "Got Static MethodID \"%s\"", "Failed To Get Static MethodID \"%s\"")
+LOG_JNI_TEST(varName, "Got Static MethodID \"%s\"", "Failed To Get Static MethodID \"%s\"", ""#varName)
 
 // Get FieldID
 
 #define GET_JFIELDID(env, varName, clazz, fieldName, sig) \
 varName = env->GetFieldID(clazz, fieldName, sig); \
-LOG_JNI_TEST(varName, "Got FieldID \"%s\"", "Failed To Get FieldID \"%s\"")
+LOG_JNI_TEST(varName, "Got FieldID \"%s\"", "Failed To Get FieldID \"%s\"", ""#varName)
 
 #define GET_STATIC_JFIELDID(env, varName, clazz, fieldName, sig) \
 varName = env->GetStaticFieldID(clazz, fieldName, sig); \
-LOG_JNI_TEST(varName, "Got Static FieldID \"%s\"", "Failed To Get Static FieldID \"%s\"")
+LOG_JNI_TEST(varName, "Got Static FieldID \"%s\"", "Failed To Get Static FieldID \"%s\"", ""#varName)
 
 // -- Call Methods -- 
 
@@ -184,12 +184,13 @@ CALL_STATIC_METHOD_GENERIC(env, varName, clazz, methodName, sig, jstring, CallSt
 
 #define GET_JFIELD_FROM_JFIELDID(env, varName, object, fieldID, type, jniMethod) \
 (type)env->jniMethod(object, fieldID); \
-LOG_JNI_TEST(varName, "Got Field \"%s\"", "Failed To Get Field \"%s\"")
+LOG_JNI_TEST(varName, "Got Field \"%s\"", "Failed To Get Field \"%s\"", ""#varName)
 
 // Get Generic Field
 
-#define GET_FIELD_GENERIC(env, varName, object, clazz, fieldName, sig, type, jniMethod) \
+#define GET_FIELD_GENERIC(env, varName, object, fieldName, sig, type, jniMethod) \
 type varName; { \
+GET_JCLASS_FROM_JOBJECT(env, clazz, object); \
 jfieldID GET_JFIELDID(env, varName##_FieldID, clazz, fieldName, sig); \
 varName = GET_JFIELD_FROM_JFIELDID(env, varName, object, varName##_FieldID, type, jniMethod); }
 
@@ -200,11 +201,11 @@ varName = GET_JFIELD_FROM_JFIELDID(env, varName, clazz, varName##_FieldID, type,
 
 // Get Boolean Field
 
-#define GET_JBOOLEAN_FIELD(env, varName, object, clazz, fieldName, sig) \
-GET_FIELD_GENERIC(env, varName, object, clazz, fieldName, sig, jboolean, GetBooleanField)
+#define GET_JBOOLEAN_FIELD(env, varName, object, fieldName, sig) \
+GET_FIELD_GENERIC(env, varName, object, fieldName, sig, jboolean, GetBooleanField)
 
 #define GET_STATIC_JBOOLEAN_FIELD(env, varName, clazz, fieldName, sig) \
-GET_STATIC_FIELD_GENERIC(env, varName, object, clazz, fieldName, sig, jboolean, GetStaticBooleanField)
+GET_STATIC_FIELD_GENERIC(env, varName, clazz, fieldName, sig, jboolean, GetStaticBooleanField)
 
 // Get Byte Field
 
@@ -256,8 +257,8 @@ GET_STATIC_FIELD_GENERIC(env, varName, object, clazz, fieldName, sig, jlong, Get
 
 // Get Object Field
 
-#define GET_JOBJECT_FIELD(env, varName, object, clazz, fieldName, sig) \
-GET_FIELD_GENERIC(env, varName, object, clazz, fieldName, sig, jobject, GetObjectField)
+#define GET_JOBJECT_FIELD(env, varName, object, fieldName, sig) \
+GET_FIELD_GENERIC(env, varName, object, fieldName, sig, jobject, GetObjectField)
 
 #define GET_STATIC_JOBJECT_FIELD(env, varName, clazz, fieldName, sig) \
 GET_STATIC_FIELD_GENERIC(env, varName, clazz, fieldName, sig, jobject, GetStaticObjectField)
@@ -272,11 +273,11 @@ GET_STATIC_FIELD_GENERIC(env, varName, object, clazz, fieldName, sig, jshort, Ge
 
 // Get String Field
 
-#define GET_JSTRING_FIELD(env, varName, object, clazz, fieldName, sig) \
-GET_FIELD_GENERIC(env, varName, object, clazz, fieldName, sig, jstring, GetObjectField)
+#define GET_JSTRING_FIELD(env, varName, object, fieldName, sig) \
+GET_FIELD_GENERIC(env, varName, object, fieldName, sig, jstring, GetObjectField)
 
 #define GET_STATIC_JSTRING_FIELD(env, varName, clazz, fieldName, sig) \
-GET_STATIC_FIELD_GENERIC(env, varName, object, clazz, fieldName, sig, jstring, GetStaticObjectField)
+GET_STATIC_FIELD_GENERIC(env, varName, clazz, fieldName, sig, jstring, GetStaticObjectField)
 
 namespace JNIUtils {
 	inline JavaVM* Jvm;
@@ -296,12 +297,16 @@ namespace JNIUtils {
 		return env;
 	}
 
-	inline std::string ToString(JNIEnv* env, jstring str) {
+	inline std::string ToString(jstring str, JNIEnv* env = nullptr) {
+		if (env == nullptr) env = GetJNIEnv();
+
 		jboolean isCopy = true;
 		return std::string(env->GetStringUTFChars(str, &isCopy));
 	}
 
-	inline jobject GetAppContext(JNIEnv* env) {
+	inline jobject GetAppContext(JNIEnv* env = nullptr) {
+		if (env == nullptr) env = GetJNIEnv();
+
 		GET_JCLASS(env, activeThreadClass, "android/app/ActivityThread");
 		CALL_STATIC_JOBJECT_METHOD(env, activeThread, activeThreadClass, "currentActivityThread", "()Landroid/app/ActivityThread;");
 
@@ -309,7 +314,9 @@ namespace JNIUtils {
 		return appContext;
 	}
 
-	inline jstring GetPackageName(JNIEnv* env) {
+	inline jstring GetPackageName(JNIEnv* env = nullptr) {
+		if (env == nullptr) env = GetJNIEnv();
+
 		jobject appContext = GetAppContext(env);
 
 		CALL_JSTRING_METHOD(env, packageName, appContext, "getPackageName", "()Ljava/lang/String;");
@@ -317,7 +324,9 @@ namespace JNIUtils {
 		return packageName;
 	}
 
-	inline jstring GetGameVersion(JNIEnv* env) {
+	inline jstring GetGameVersion(JNIEnv* env = nullptr) {
+		if (env == nullptr) env = GetJNIEnv();
+
 		jstring packageName = GetPackageName(env);
 		jobject appContext = GetAppContext(env);
 
@@ -326,9 +335,57 @@ namespace JNIUtils {
 		CALL_JOBJECT_METHOD(env, packageInfo, packageManager, "getPackageInfo", "(Ljava/lang/String;I)Landroid/content/pm/PackageInfo;", packageName, 0);
 		GET_JCLASS_FROM_JOBJECT(env, packageInfoClass, packageInfo);
 		
-		GET_JSTRING_FIELD(env, versionName, packageInfo, packageInfoClass, "versionName", "Ljava/lang/String;");
+		GET_JSTRING_FIELD(env, versionName, packageInfo, "versionName", "Ljava/lang/String;");
 
 		return versionName;
+	}
+
+	inline jint GetPID(JNIEnv* env = nullptr) {
+		if (env == nullptr) env = GetJNIEnv();
+
+		GET_JCLASS(env, processClass, "android/os/Process");
+		CALL_STATIC_JINT_METHOD(env, pid, processClass, "myPid", "()I");
+
+		return pid;
+	}
+
+	inline void KillApp(JNIEnv* env = nullptr) {
+		if (env == nullptr) env = GetJNIEnv();
+
+		GET_JCLASS(env, processClass, "android/os/Process");
+		CALL_STATIC_VOID_METHOD(env, processClass, "killProcess", "(I)V", GetPID(env));
+	}
+
+	inline void RestartApp(JNIEnv* env = nullptr, std::string packageNameStr = "") {
+		if (env == nullptr) env = GetJNIEnv();
+		jstring packageName;
+		
+		if (packageNameStr == "") packageName = GetPackageName(env);
+		else packageName = env->NewStringUTF(packageNameStr.c_str());
+
+		// Get Activity
+		jobject appContext = GetAppContext(env);
+
+		// Get Package Manager
+		CALL_JOBJECT_METHOD(env, packageManager, appContext, "getPackageManager", "()Landroid/content/pm/PackageManager;");
+
+		// Get Intent
+		CALL_JOBJECT_METHOD(env, intent, packageManager, "getLaunchIntentForPackage", "(Ljava/lang/String;)Landroid/content/Intent;", packageName);
+
+		// Set Intent Flags
+		CALL_JOBJECT_METHOD(env, setFlagsSuccess, intent, "setFlags", "(I)Landroid/content/Intent;", 536870912);
+
+		// Get Component Name
+		CALL_JOBJECT_METHOD(env, componentName, intent, "getComponent", "()Landroid/content/ComponentName;");
+
+		// Create Restart Intent
+		GET_JCLASS(env, intentClass, "android/content/Intent");
+		CALL_STATIC_JOBJECT_METHOD(env, restartIntent, intentClass, "makeRestartActivityTask", "(Landroid/content/ComponentName;)Landroid/content/Intent;", componentName);
+
+		// Restart Game
+		CALL_VOID_METHOD(env, appContext, "startActivity", "(Landroid/content/Intent;)V", restartIntent);
+
+		KillApp(env);
 	}
 
 	// -- Private Functions --
